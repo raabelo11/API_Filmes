@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FilmesAPI.Models;
 using FilmesAPI.Data;
 using FilmesAPI.Data.Dtos;
+using AutoMapper;
 
 namespace FilmesAPI.Controllers
 {
@@ -14,23 +15,19 @@ namespace FilmesAPI.Controllers
     public class FilmeController : ControllerBase
     {
         private FilmeContext _context;
+        private IMapper _automapper;
 
-        public FilmeController(FilmeContext context)
+        public FilmeController(FilmeContext context, IMapper mapper)
         {
             _context = context;
+            _automapper = mapper;
         }
 
         [HttpPost("Adiciona_filme")] //Criar recurso novo.
         public IActionResult AdicionaFilme([FromBody] AdicionaFilmesDto adFilmesDto)
         {
-            Filme filme = new Filme
-            {
-                Titulo = adFilmesDto.Titulo,
-                Genero = adFilmesDto.Genero,
-                Duracao = adFilmesDto.Duracao,
-                Diretor = adFilmesDto.Diretor,
-            };
-
+            Filme filme = _automapper.Map<Filme>(adFilmesDto);
+            //auto map pega as informações da classe AdicionaFilmesDto e salva na classe filme.
             _context.Filmes.Add(filme);
             _context.SaveChanges(); // salva o json no banco de dados
             return CreatedAtAction(nameof(RetornaFilmesPorId), new { Id = filme.Id }, filme); //informa aonde o json foi gravado local onde pode ser acessado
@@ -49,15 +46,8 @@ namespace FilmesAPI.Controllers
             Filme filme = _context.Filmes.FirstOrDefault(filme => filme.Id == id);  //recupera o filme já cadastrado, se for null = NotFound
             if(filme != null)
             {
-                LerFilmesDto lerfilmesDto = new LerFilmesDto
-                {
-                    Titulo = filme.Titulo,
-                    Diretor = filme.Diretor,
-                    Duracao = filme.Duracao,
-                    Id = filme.Id,
-                    Genero = filme.Genero,
-                    HoraDaConsulta = DateTime.Now
-                };
+                LerFilmesDto lerfilmesDto = _automapper.Map<LerFilmesDto>(filme);
+                //auto map converte filme para LerFilmesDto.
                 return Ok(lerfilmesDto);
             }
             return NotFound();
@@ -75,10 +65,8 @@ namespace FilmesAPI.Controllers
             }
             else
             {
-                filme.Titulo = modFilmesDto.Titulo;
-                filme.Genero = modFilmesDto.Genero;
-                filme.Diretor = modFilmesDto.Diretor;
-                filme.Duracao = modFilmesDto.Duracao;
+                _automapper.Map(modFilmesDto, filme); 
+                //auto map pega as informações inseridas em modFilmesDto e salva na classe filme.
                 _context.SaveChanges();
                 return NoContent();
             }
