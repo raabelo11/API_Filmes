@@ -7,6 +7,8 @@ using FilmesAPI.Models;
 using FilmesAPI.Data;
 using FilmesAPI.Data.Dtos;
 using AutoMapper;
+using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace FilmesAPI.Controllers
 {
@@ -16,12 +18,16 @@ namespace FilmesAPI.Controllers
     {
         private FilmeContext _context;
         private IMapper _automapper;
+        private readonly ILogger<FilmeController> _logger;
 
-        public FilmeController(FilmeContext context, IMapper mapper)
+        public FilmeController(FilmeContext context, IMapper mapper, ILogger<FilmeController> logger)
         {
             _context = context;
             _automapper = mapper;
-        }
+            _logger = logger;
+
+        }      
+
 
         [HttpPost("Adiciona_filme")] //Criar recurso novo.
         public IActionResult AdicionaFilme([FromBody] AdicionaFilmesDto adFilmesDto)
@@ -37,12 +43,15 @@ namespace FilmesAPI.Controllers
         [HttpGet("Retorna_filme")] //Retorna os dados do filme.
         public IEnumerable<Filme> RetornaFilmes()
         {
-            return(_context.Filmes);
+            _logger.LogInformation("Você deu um GET");
+           return (_context.Filmes);
+           
         }
 
         [HttpGet("Retorna_filmes {id}")] // identificador do ID do filme desejado a ser retornado: ex: localhost:500/filme/1
         public IActionResult RetornaFilmesPorId(int id)
         {
+            _logger.LogInformation("Executando o filme do ID: " + id );
             Filme filme = _context.Filmes.FirstOrDefault(filme => filme.Id == id);  //recupera o filme já cadastrado, se for null = NotFound
             if(filme != null)
             {
